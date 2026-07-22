@@ -1,0 +1,454 @@
+{
+  "info": {
+    "_postman_id": "c7a8b3d2-45fe-4b1d-9be5-1f99c6428c9a",
+    "name": "تطبيق كن محمداً - Kun Mohammadan API",
+    "description": "مجموعة واجهات برمجة التطبيقات (API Endpoints) الخاصة بتطبيق كُنْ مُحَمَّداً الإسلامي الشامل. تحتوي هذه المجموعة على كافة روابط الاتصال الخاصة بالمستشار الشرعي الذكي، والبحث الذكي في الأحاديث، ونظام الختمات التشاركية، بالإضافة إلى استرجاع الأذكار وقصص الأنبياء وفهرس وسور القرآن الكريم والمزيد. مخصصة لمطور الفلاتر (Flutter Developer).\n\nاسم المطور المسؤول عن الباك أند: محمود سفين\nهاتف المطور: 01211542025",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "المعلومات العامة والتشغيل",
+      "item": [
+        {
+          "name": "فحص حالة الخادم (Health Check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "يستخدم لفحص ما إذا كان الخادم (Backend Server) يعمل بنجاح وبدون أي مشاكل تقنية."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "الركن الشرعي والذكاء الاصطناعي",
+      "item": [
+        {
+          "name": "سؤال المستشار الشرعي الذكي (Gemini Q&A)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"ما فضل صلاة الضحى ووقتها بالتفصيل؟\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ask",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ask"
+              ]
+            },
+            "description": "يقوم بإرسال السؤال الديني إلى الذكاء الاصطناعي (Gemini API) ليقوم بصياغة إجابة فقهية ميسرة ومعتدلة وموثقة بالكتاب والسنة الشريفة. في حال عدم توفر مفتاح الذكاء الاصطناعي، يحتوي الباك أند على نظام ذكي مدمج (Local Fallback) يقوم بفحص الكلمات الدلالية وإرجاع إجابات حية مجهزة مسبقاً."
+          },
+          "response": []
+        },
+        {
+          "name": "البحث الذكي في الأحاديث النبوية (Hadith Search)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"الرحمة وحسن الخلق للناس\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hadith/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hadith",
+                "search"
+              ]
+            },
+            "description": "يبحث بشكل شامل وذكي في أمهات كتب الحديث والسنّة الشريفة (البخاري ومسلم وغيرهما) ويرجع النتيجة كمصفوفة JSON مهيأة بـ 3 أحاديث صحيحة متعلقة بكلمة أو موضوع البحث مع الشرح والراوي والمصدر والتصنيف."
+          },
+          "response": []
+        },
+        {
+          "name": "استدعاء حديث محدد بالترقيم (Hadith By Number)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": 1,\n  \"book\": \"bukhari\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hadith/by-number",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hadith",
+                "by-number"
+              ]
+            },
+            "description": "يستدعي حديثاً شريفاً محدداً برقم ترتيبه من الكتب المعتمدة (bukhari, muslim, riyad, nawawi) مع إرجاع التشكيل والشرح الفقهي والتربوي له بالكامل عبر الذكاء الاصطناعي."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "الختمات التشاركية والجماعية (Collaborative Khatma)",
+      "item": [
+        {
+          "name": "إنشاء ختمة تشاركية جديدة",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ختمتنا العائلية لرمضان\",\n  \"durationDays\": 30,\n  \"creatorName\": \"محمود سفين\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/khatma/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "khatma",
+                "create"
+              ]
+            },
+            "description": "يقوم بإنشاء ختمة جماعية جديدة وحفظها في الباك أند، ويرجع رمز فريد ومميز (مثل: KH-123456) ليقوم منشئ الختمة بمشاركته مع أصدقائه وعائلته للانضمام والقراءة معاً."
+          },
+          "response": []
+        },
+        {
+          "name": "الانضمام إلى ختمة تشاركية",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"KH-123456\",\n  \"friendName\": \"أحمد عمر\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/khatma/join",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "khatma",
+                "join"
+              ]
+            },
+            "description": "يسمح للمستخدم بالانضمام للختمة التشاركية عبر إدخال كود الختمة واسمه، ليصبح اسمه مسجلاً في قائمة المشاركين في القراءة."
+          },
+          "response": []
+        },
+        {
+          "name": "تحديد قراءة صفحة / إلغاء تحديد (Toggle Page)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"KH-123456\",\n  \"pageNumber\": 15,\n  \"read\": true,\n  \"userName\": \"أحمد عمر\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/khatma/toggle-page",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "khatma",
+                "toggle-page"
+              ]
+            },
+            "description": "يستخدم عند قيام أي مستخدم بإنهاء قراءة صفحة معينة في المصحف، حيث يتم حفظ رقم الصفحة واسم القارئ وتوقيت القراءة بشكل لحظي وتشاركي."
+          },
+          "response": []
+        },
+        {
+          "name": "مزامنة وتحديث حالة الختمة التشاركية",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/khatma/sync/:code",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "khatma",
+                "sync",
+                ":code"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "KH-123456",
+                  "description": "رمز الختمة الجماعية المراد مزامنتها"
+                }
+              ]
+            },
+            "description": "يجلب الحالة الكاملة والمحدثة للختمة التشاركية؛ بما في ذلك الصفحات المقروءة، من قرأ كل صفحة، وأسماء الأصدقاء المتواجدين بالختمة حالياً."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "البيانات الإسلامية المدمجة (Local Resources API)",
+      "item": [
+        {
+          "name": "جلب قائمة الأذكار (Azkar API)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/azkar?category=morning",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "azkar"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "morning",
+                  "description": "تصفية الأذكار حسب التصنيف (مثال: morning, evening, sleep, prayers). اختياري، عند حذفه يتم إرجاع كل الأذكار."
+                }
+              ]
+            },
+            "description": "يسترجع الأذكار الإسلامية والتحصينات الشرعية مع نص الذكر بالتشكيل، وعدد مرات التكرار المطلوبة، والفضل الإلهي والمنفعة المترتبة على قراءته."
+          },
+          "response": []
+        },
+        {
+          "name": "جلب قصص الأنبياء (Prophets Stories API)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/prophets?id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "prophets"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "رقم معرف النبي (مثال: 1 لقصة آدم عليه السلام). اختياري، عند حذفه يتم إرجاع كافة قصص الأنبياء كاملة."
+                }
+              ]
+            },
+            "description": "يسترجع قصص الأنبياء والرسل بأسلوب روائي مميز ودقيق، يحتوي على الدروس المستفادة من القصة، والآيات القرآنية الشريفة التي أشارت لقصته."
+          },
+          "response": []
+        },
+        {
+          "name": "فهرس سور القرآن الكريم (Quran Index)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/quran/surahs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "quran",
+                "surahs"
+              ]
+            },
+            "description": "يجلب فهرساً خفيف الوزن لكافة سور القرآن الكريم المتاحة في التطبيق، يعرض اسم السورة بالعربية والإنجليزية، نوعها (مكية/مدنية)، وعدد آياتها الإجمالي."
+          },
+          "response": []
+        },
+        {
+          "name": "تفاصيل سورة قرآنية محددة وآياتها",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/quran/surah/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "quran",
+                "surah",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "رقم السورة المراد جلب آياتها (مثلاً: 1 للفاتحة، 97 للقدر)"
+                }
+              ]
+            },
+            "description": "يجلب السورة القرآنية بالكامل محتوية على النصوص الدقيقة لآياتها بالتشكيل الكامل، ومرفقة بروابط بث مباشر للصوت (Audio URL) بصوت الشيخ مشاري بن راشد العفاسي لكل آية منفردة لتسهيل التحفيظ والاستماع."
+          },
+          "response": []
+        },
+        {
+          "name": "الأسئلة والأجوبة الفقهية المجهزة (Offline FAQs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faq?category=prayer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faq"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "prayer",
+                  "description": "التصنيف الفقهي (مثال: prayer, purity, fasting, morals, sunnah). اختياري."
+                }
+              ]
+            },
+            "description": "يجلب بنك الأسئلة والأجوبة الدينية والفقهية الموثقة المتاحة للاستعراض دون حاجة للإنترنت، والمصنفة موضوعياً."
+          },
+          "response": []
+        },
+        {
+          "name": "الأحاديث المحلية المختارة (Local Hadiths)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hadiths/local",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hadiths",
+                "local"
+              ]
+            },
+            "description": "يجلب مجموعة واسعة ومختارة من الأحاديث النبوية الشريفة المدمجة بالتطبيق (الأربعون النووية، مكارم الأخلاق، العقيدة) مع الشرح المفصل ومصادرها لمطالعتها وحفظها محلياً."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ملف توثيق المطورين",
+      "item": [
+        {
+          "name": "تحميل ملف Postman Collection مباشرة",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/postman-collection",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "postman-collection"
+              ]
+            },
+            "description": "يقوم بتحميل ملف JSON الخاص بهذه التجميعة (Postman Collection) مباشرة من الخادم ليتمكن مطور فلاتر من استيراده بضغطة زر داخل برنامج بوستمان."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://ais-dev-qsi7sxwop2qgb3dmsldgra-477724802709.europe-west3.run.app",
+      "type": "string",
+      "description": "رابط خادم الباك أند الحالي الخاص بالتطبيق للتجربة اللحظية المباشرة"
+    }
+  ]
+}

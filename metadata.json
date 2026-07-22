@@ -1,0 +1,12 @@
+{
+  "name": "كن محمداً",
+  "description": "تطبيق إسلامي متكامل يضم أحاديث نبوية، ركن لحفظ القرآن الكريم، جدول لختم القرآن، ومسبحة إلكترونية مع أذكار وأدعية يومية.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
