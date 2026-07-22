@@ -97,30 +97,30 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ onNavigate, darkMo
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-right max-w-4xl mx-auto shadow-sm"
+          className="w-full max-w-full overflow-hidden bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 p-5 rounded-3xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 text-right"
         >
-          <div className="space-y-0.5">
-            <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5 justify-start">
-              <User className="h-4 w-4 text-amber-700 shrink-0" />
+          <div className="space-y-1 min-w-0">
+            <h4 className="text-sm font-black text-amber-900 dark:text-amber-200 flex items-center gap-2 justify-start">
+              <User className="h-4.5 w-4.5 text-amber-700 shrink-0" />
               <span>أهلاً بك في تطبيق كُنْ مُحَمَّداً! 🌿</span>
             </h4>
-            <p className="text-[11px] text-stone-500 dark:text-stone-400 font-bold">
-              أدخل اسمك الكريم ليرحب بك التطبيق عند فتحه في كل مرة:
+            <p className="text-xs text-stone-500 dark:text-stone-400 font-bold">
+              أدخل اسمك الكريم ليرحب بك التطبيق عند فتحه في كل مرة ويذكرك بالصلوات المكتوبة:
             </p>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto min-w-0">
             <input 
               type="text"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
               placeholder="اكتب اسمك هنا..."
-              className="px-3 py-1.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-xs font-bold text-stone-800 dark:text-stone-100 outline-none focus:border-amber-500 flex-1 sm:w-36 text-right font-serif"
+              className="px-4 py-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-xs font-bold text-stone-800 dark:text-stone-100 outline-none focus:border-amber-500 flex-1 min-w-0 md:w-48 text-right font-serif"
             />
             <button
               onClick={handleSaveName}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-lg cursor-pointer transition-colors shrink-0 shadow-xs"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-colors shrink-0 shadow-sm whitespace-nowrap"
             >
-              حفظ
+              حفظ الاسم
             </button>
           </div>
         </motion.div>

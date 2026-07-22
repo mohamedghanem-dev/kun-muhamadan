@@ -1,8 +1,11 @@
-const CACHE_NAME = 'kun-mohammad-v1';
+const CACHE_NAME = 'kun-mohammad-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/favicon.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 // Install Event

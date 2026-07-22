@@ -1,0 +1,89 @@
+name: Build Android APK (كُنْ مُحَمَّداً)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Pillow
+        run: pip install Pillow --quiet
+
+      - name: Install web app dependencies
+        run: npm install
+
+      - name: Build the web app (Vite)
+        # This local build is only used as Capacitor's required fallback
+        # "webDir" (for icon/splash generation etc). The app itself is
+        # configured below to load the live hosted site directly (see
+        # "server.url" in capacitor.config.json), so the APK always shows
+        # the current live site with AI, Khatma-sync, etc. working exactly
+        # as they do in a browser — no separate offline copy to keep in sync.
+        run: npx vite build
+
+      - name: Init Capacitor project
+        run: |
+          mkdir -p app
+          cd app
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets @capacitor/local-notifications @capacitor/app
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.mohamedghanem.kunmuhammadan",
+            "appName": "كُنْ مُحَمَّداً",
+            "webDir": "../dist",
+            "bundledWebRuntime": false,
+            "server": {
+              "url": "https://service-700838468324.europe-west2.run.app",
+              "cleartext": false
+            }
+          }
+          EOF
+
+      - name: Add Android platform
+        run: |
+          cd app
+          npx cap add android
+
+      - name: Sync web assets into the Android project
+        run: |
+          cd app
+          npx cap copy android
+          npx cap update android
+
+      - name: Prepare app icon
+        run: python3 resize_icon.py
+
+      - name: Generate Android icons & splash from icon
+        run: |
+          cd app
+          npx capacitor-assets generate --android
+
+      - name: Build APK
+        run: |
+          cd app/android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KunMuhammadan-Android-APK
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

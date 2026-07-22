@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { OFFLINE_QAS } from '../data/offlineQAs';
+import { apiUrl } from '../lib/apiBase';
 
 interface QAPair {
   question: string;
@@ -87,7 +88,7 @@ export const ReligiousAsk: React.FC = () => {
     setActiveAnswer('');
 
     try {
-      const response = await fetch('/api/ask', {
+      const response = await fetch(apiUrl('/api/ask'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -33,7 +33,7 @@ export const DeveloperApi: React.FC = () => {
   const [customParams, setCustomParams] = useState<Record<string, string>>({});
   const [activeFilter, setActiveFilter] = useState<'all' | 'core' | 'ai' | 'khatma' | 'resources'>('all');
 
-  const baseUrl = window.location.origin;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/$/, '');
 
   const endpoints: Endpoint[] = [
     // General
@@ -263,7 +263,7 @@ export const DeveloperApi: React.FC = () => {
         options.body = customBodies[endpoint.id] || endpoint.requestBody || '{}';
       }
 
-      const res = await fetch(url, options);
+      const res = await fetch(`${baseUrl}${url}`, options);
       const data = await res.json();
       
       setApiResults(prev => ({

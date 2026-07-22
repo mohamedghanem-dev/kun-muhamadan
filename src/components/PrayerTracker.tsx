@@ -15,6 +15,9 @@ import {
   Play
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { App as CapacitorApp } from '@capacitor/app';
 
 interface PrayerTime {
   name: string;
@@ -219,6 +222,46 @@ const CITY_PRAYER_TIMES: { [key: string]: { fajr: string; shorouk: string; dhuhr
     return `${finalH}:${finalM}`;
   };
 
+  // --- NATIVE ANDROID ALARMS (works even when the app is closed, unlike web timers) ---
+  // Only runs inside the packaged APK (Capacitor native), not on the website.
+  const scheduleNativePrayerAlarms = async (times: PrayerTime[]) => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    try {
+      let perm = await LocalNotifications.checkPermissions();
+      if (perm.display !== 'granted') {
+        perm = await LocalNotifications.requestPermissions();
+      }
+      if (perm.display !== 'granted') return;
+
+      const prayerList = times.filter(p => p.name !== 'Shorouk');
+      // Cancel any previously scheduled alarms before re-scheduling with fresh times
+      await LocalNotifications.cancel({
+        notifications: prayerList.map((_, idx) => ({ id: idx + 1 }))
+      });
+
+      const now = new Date();
+      const notifications = prayerList.map((pt, idx) => {
+        const adjustedTime = getAdjustedTime(pt);
+        const [h, m] = adjustedTime.split(':').map(Number);
+        let when = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+        if (when.getTime() <= now.getTime()) {
+          when = new Date(when.getTime() + 24 * 60 * 60 * 1000);
+        }
+        return {
+          id: idx + 1,
+          title: `حان الآن موعد صلاة ${pt.nameAr} 🕋`,
+          body: `أقم صلاتك يرحمك الله. حان الآن وقت فريضة ${pt.nameAr} بتوقيتك المحلي.`,
+          schedule: { at: when, allowWhileIdle: true },
+        };
+      });
+
+      await LocalNotifications.schedule({ notifications });
+    } catch (err) {
+      console.warn('Native prayer alarm scheduling failed', err);
+    }
+  };
+
   // --- SOUND SYNTHESIS USING WEB AUDIO API (Gentle, beautiful offline notification chime) ---
   const playAlarmSound = (frequency: number = 659.25, duration: number = 1.2) => {
     try {
@@ -258,8 +301,26 @@ const CITY_PRAYER_TIMES: { [key: string]: { fajr: string; shorouk: string; dhuhr
     }
   };
 
-  // --- NATIVE BROWSER PUSH NOTIFICATIONS ---
+  // --- NOTIFICATIONS PERMISSION (native APK alarms or browser push, depending on platform) ---
   const requestNotificationPermission = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const perm = await LocalNotifications.requestPermissions();
+        if (perm.display === 'granted') {
+          setEnableBrowserNotifications(true);
+          localStorage.setItem('km_prayer_alarms_notify', 'true');
+          await scheduleNativePrayerAlarms(prayerTimes);
+        } else {
+          setEnableBrowserNotifications(false);
+          localStorage.setItem('km_prayer_alarms_notify', 'false');
+          alert('تم رفض إذن الإشعارات. يرجى تفعيله يدوياً من إعدادات النظام للتطبيق.');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return;
+    }
+
     if (!('Notification' in window)) {
       alert('متصفحك الحالي لا يدعم الإشعارات الفورية للمتصفح.');
       return;
@@ -291,6 +352,11 @@ const CITY_PRAYER_TIMES: { [key: string]: { fajr: string; shorouk: string; dhuhr
     } else {
       setEnableBrowserNotifications(false);
       localStorage.setItem('km_prayer_alarms_notify', 'false');
+      if (Capacitor.isNativePlatform()) {
+        LocalNotifications.cancel({
+          notifications: prayerTimes.filter(p => p.name !== 'Shorouk').map((_, idx) => ({ id: idx + 1 }))
+        }).catch(() => {});
+      }
     }
   };
 
@@ -387,6 +453,23 @@ const CITY_PRAYER_TIMES: { [key: string]: { fajr: string; shorouk: string; dhuhr
     const interval = setInterval(calculateAndCheckAlarms, 10000);
     return () => clearInterval(interval);
   }, [prayerTimes, enableAlarmSounds, enableBrowserNotifications]);
+
+  // Keep native (APK) alarms in sync with prayer time adjustments & the notification toggle
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !enableBrowserNotifications) return;
+    scheduleNativePrayerAlarms(prayerTimes);
+  }, [prayerTimes, enableBrowserNotifications]);
+
+  // Re-schedule when the app is resumed (e.g. opened the next day) so alarms don't go stale
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = CapacitorApp.addListener('resume', () => {
+      if (enableBrowserNotifications) scheduleNativePrayerAlarms(prayerTimes);
+    });
+    return () => {
+      listenerPromise.then(listener => listener.remove()).catch(() => {});
+    };
+  }, [prayerTimes, enableBrowserNotifications]);
 
   // Simulating Compass rotation
   const rotateCompass = () => {

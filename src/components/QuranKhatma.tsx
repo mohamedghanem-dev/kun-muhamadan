@@ -19,6 +19,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { apiUrl } from '../lib/apiBase';
 
 // Exact page mapping for each Juz of the Quran (standard 604-page Madinah Mushaf)
 const JUZ_PAGES = [
@@ -341,7 +342,7 @@ export const QuranKhatma: React.FC = () => {
     try {
       setIsCollabLoading(true);
       setCollabError('');
-      const res = await fetch('/api/khatma/create', {
+      const res = await fetch(apiUrl('/api/khatma/create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -378,7 +379,7 @@ export const QuranKhatma: React.FC = () => {
     try {
       setIsCollabLoading(true);
       setCollabError('');
-      const res = await fetch('/api/khatma/join', {
+      const res = await fetch(apiUrl('/api/khatma/join'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -408,7 +409,7 @@ export const QuranKhatma: React.FC = () => {
     if (!codeStr) return;
     try {
       if (!silent) setSyncing(true);
-      const res = await fetch(`/api/khatma/sync/${codeStr.toUpperCase().trim()}`);
+      const res = await fetch(apiUrl(`/api/khatma/sync/${codeStr.toUpperCase().trim()}`));
       if (!res.ok) throw new Error('فشل التحديث من الخادم.');
       const data: SharedKhatma = await res.json();
       setSharedKhatma(data);
@@ -440,7 +441,7 @@ export const QuranKhatma: React.FC = () => {
     });
 
     try {
-      const res = await fetch('/api/khatma/toggle-page', {
+      const res = await fetch(apiUrl('/api/khatma/toggle-page'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -18,6 +18,7 @@ import {
   Dices
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { apiUrl } from '../lib/apiBase';
 
 export const HadithExplorer: React.FC = () => {
   const [hadiths] = useState<Hadith[]>(HADITHS_DATA);
@@ -90,7 +91,7 @@ export const HadithExplorer: React.FC = () => {
     setAiFallbackMessage('');
 
     try {
-      const response = await fetch('/api/hadith/search', {
+      const response = await fetch(apiUrl('/api/hadith/search'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ export const HadithExplorer: React.FC = () => {
     setNumIsFallback(false);
 
     try {
-      const response = await fetch('/api/hadith/by-number', {
+      const response = await fetch(apiUrl('/api/hadith/by-number'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

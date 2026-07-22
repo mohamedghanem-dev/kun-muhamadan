@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Share2, 
+  Check, 
   Bluetooth, 
   Smartphone, 
   ShieldCheck, 
@@ -9,6 +10,7 @@ import {
   FolderCheck, 
   MapPin, 
   CheckCircle2, 
+  AlertCircle,
   Radio,
   Wifi,
   Sparkles,
@@ -17,6 +19,7 @@ import {
 } from 'lucide-react';
 
 export const ShareApp: React.FC = () => {
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [bluetoothActive, setBluetoothActive] = useState<boolean>(false);
 
   // Device permissions state
@@ -151,6 +154,8 @@ export const ShareApp: React.FC = () => {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
     }
     setTimeout(() => setBluetoothActive(false), 3000);
   };
