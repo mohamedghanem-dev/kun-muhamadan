@@ -45,8 +45,8 @@ async function generateGeminiContent(
     responseMimeType?: string;
   }
 ) {
-  // Ordered list of robust models according to guidelines.
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro"];
+  // Ordered list of valid models according to platform guidelines
+  const models = ["gemini-3.6-flash", "gemini-3.1-pro-preview"];
   let lastError: any = null;
 
   for (const model of models) {
@@ -343,6 +343,7 @@ async function startServer() {
           });
 
           let textResponse = response.text || "[]";
+          textResponse = textResponse.replace(/```json/gi, "").replace(/```/g, "").trim();
           const jsonMatch = textResponse.match(/\[\s*\{[\s\S]*\}\s*\]/);
           if (jsonMatch) {
             const cleanParsed = JSON.parse(jsonMatch[0]);
@@ -350,7 +351,7 @@ async function startServer() {
             return;
           }
         } catch (geminiErr) {
-          console.log("Gemini Hadith Search transient failure, using online dataset search:", geminiErr);
+          console.log("Gemini Hadith Search transient failure, using dataset search:", geminiErr);
         }
       }
 
@@ -385,17 +386,6 @@ async function startServer() {
         return;
       }
 
-      const bookEditionMap: Record<string, string> = {
-        bukhari: "ara-bukhari",
-        muslim: "ara-muslim",
-        nawawi: "ara-nawawi",
-        riyad: "ara-bukhari",
-        abudawud: "ara-abudawud",
-        tirmidhi: "ara-tirmidhi",
-        nasai: "ara-nasai",
-        ibnmajah: "ara-ibnmajah"
-      };
-
       const bookNames: Record<string, string> = {
         bukhari: "صحيح البخاري",
         muslim: "صحيح مسلم",
@@ -405,13 +395,63 @@ async function startServer() {
         tirmidhi: "جامع الترمذي"
       };
 
-      const edition = bookEditionMap[book] || "ara-bukhari";
-      const bookName = bookNames[book] || "صحيح الحديث";
+      const bookName = bookNames[book] || "صحيح البخاري";
 
-      // 1. Direct Live Fetch from Online Hadith API over JSDelivr CDN
+      // 1. Try Gemini first for instant, complete, accurate Hadith retrieval with explanation
+      const client = getGeminiClient();
+      if (client) {
+        try {
+          const systemInstruction = 
+            "أنت باحث ومحدث إسلامي خبير وعالم بالحديث الشريف ومصنفات السنة المطهرة. " +
+            "بناءً على الرقم المختار والكتاب المحدد من قبل المستخدم، ابحث واستخرج الحديث الشريف المطابق تماماً لرقمه وترتيبه في ذلك الكتاب. " +
+            "يجب أن ترجع النتيجة كصيغة JSON صالحة تماماً، عبارة عن كائن (Object) يحتوي على الحقول التالية حصراً وبدون أي نصوص إضافية خارج الـ JSON:\n" +
+            "{\n" +
+            "  \"id\": " + hadithNum + ",\n" +
+            "  \"text\": \"نص الحديث الشريف كاملاً بالتشكيل الدقيق...\",\n" +
+            "  \"explanation\": \"شرح ميسر وعميق ومستفاد فقهياً وتربوياً من الحديث الشريف...\",\n" +
+            "  \"narrator\": \"اسم الصحابي راوي الحديث (مثلاً: عن أبي هريرة رضي الله عنه)...\",\n" +
+            "  \"source\": \"" + bookName + " - الحديث رقم (" + hadithNum + ")\",\n" +
+            "  \"categoryAr\": \"" + bookName + "\"\n" +
+            "}\n";
+
+          const response = await generateGeminiContent(client, {
+            contents: `أوجد الحديث رقم ${hadithNum} من كتاب ${bookName} بدقة متناهية مع شرحه وراويه ومصدره بالتنسيق المطلوب.`,
+            systemInstruction: systemInstruction,
+            temperature: 0.2,
+            responseMimeType: "application/json"
+          });
+
+          let textResponse = response.text || "{}";
+          textResponse = textResponse.replace(/```json/gi, "").replace(/```/g, "").trim();
+          const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const cleanParsed = JSON.parse(jsonMatch[0]);
+            res.json({ hadith: cleanParsed, isFallback: false });
+            return;
+          }
+        } catch (geminiErr) {
+          console.log("Gemini By Number Hadith error:", geminiErr);
+        }
+      }
+
+      // 2. Direct Live Fetch from Online Hadith API over JSDelivr CDN as fallback
+      const bookEditionMap: Record<string, string> = {
+        bukhari: "ara-bukhari",
+        muslim: "ara-muslim",
+        nawawi: "ara-nawawi",
+        riyad: "ara-bukhari",
+        abudawud: "ara-abudawud",
+        tirmidhi: "ara-tirmidhi"
+      };
+      const edition = bookEditionMap[book] || "ara-bukhari";
+
       try {
         const fetchUrl = `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${edition}/${hadithNum}.json`;
-        const apiRes = await fetch(fetchUrl);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const apiRes = await fetch(fetchUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (apiRes.ok) {
           const apiData = await apiRes.json();
           if (apiData && apiData.hadiths && apiData.hadiths.length > 0) {
@@ -430,7 +470,7 @@ async function startServer() {
                 text: rawText,
                 narrator: narrator,
                 source: `${bookName} - الحديث رقم (${hadithNum})`,
-                explanation: `هذا الحديث الشريف المبارك رقم (${hadithNum}) مستخرج مباشرة أونلاين عبر الشبكة من كتب السنة المعتمدة (${bookName}). يحتوي على توجيهات نبوية شريفة سامية في تزكية النفوس والأخلاق والتقرب إلى الله تعالى بالعمل الصالح.`,
+                explanation: `هذا الحديث الشريف المبارك رقم (${hadithNum}) مستخرج مباشرة عبر كتب السنة المعتمدة (${bookName}). يحتوي على توجيهات نبوية شريفة في تزكية النفوس والأخلاق.`,
                 categoryAr: bookName
               },
               isFallback: false
@@ -439,43 +479,7 @@ async function startServer() {
           }
         }
       } catch (cdnErr) {
-        console.log("JSDelivr Hadith fetch error, checking Gemini fallback...", cdnErr);
-      }
-
-      // 2. Gemini fallback
-      const client = getGeminiClient();
-      if (client) {
-        try {
-          const systemInstruction = 
-            "أنت باحث ومحدث إسلامي خبير وعالم بالحديث الشريف ومصنفات السنة المطهرة. " +
-            "بناءً على الرقم المختار والكتاب المحدد من قبل المستخدم، ابحث واستخرج الحديث الشريف المطابق تماماً لرقمه وترتيبه في ذلك الكتاب. " +
-            "يجب أن ترجع النتيجة كصيغة JSON صالحة تماماً، عبارة عن كائن (Object) يحتوي على الحقول التالية حصراً وبدون أي نصوص إضافية خارج الـ JSON:\n" +
-            "{\n" +
-            "  \"id\": " + hadithNum + ",\n" +
-            "  \"text\": \"نص الحديث الشريف كاملاً بالتشكيل الدقيق...\",\n" +
-            "  \"explanation\": \"شرح ميسر وعميق ومستفاد فقهياً وتربوياً من الحديث الشريف...\",\n" +
-            "  \"narrator\": \"اسم الصحابي راوي الحديث (مثلاً: عن أبي هريرة رضي الله عنه)...\",\n" +
-            "  \"source\": \"رقم الحديث ومصدره التفصيلي (مثلاً: صحيح البخاري، رقم الحديث " + hadithNum + ")...\",\n" +
-            "  \"categoryAr\": \"تصنيف موضوعي مناسب للحديث\"\n" +
-            "}\n";
-
-          const response = await generateGeminiContent(client, {
-            contents: `أوجد الحديث رقم ${hadithNum} من كتاب ${bookName} بدقة متناهية مع شرحه وراويه ومصدره بالتنسيق المطلوب.`,
-            systemInstruction: systemInstruction,
-            temperature: 0.3,
-            responseMimeType: "application/json"
-          });
-
-          let textResponse = response.text || "{}";
-          const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const cleanParsed = JSON.parse(jsonMatch[0]);
-            res.json({ hadith: cleanParsed, isFallback: false });
-            return;
-          }
-        } catch (geminiErr) {
-          console.log("Gemini By Number Hadith error:", geminiErr);
-        }
+        console.log("JSDelivr Hadith fetch error:", cdnErr);
       }
 
       // 3. Local database match
@@ -490,7 +494,7 @@ async function startServer() {
         isFallback: false
       });
     } catch (error: any) {
-      console.error("Hadith By Number Gemini Error:", error);
+      console.error("Hadith By Number Error:", error);
       res.status(500).json({ error: "حدث خطأ أثناء استدعاء الحديث بالرقم. يرجى إعادة المحاولة." });
     }
   });
